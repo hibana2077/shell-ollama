@@ -1,0 +1,44 @@
+services:
+
+  backend:
+    build: ./backend
+    ports:
+      - "8081:8081"
+    volumes:
+      - ./backend:/app
+    environment:
+      HOST: "0.0.0.0"
+      OLLAMA_SERVER: "http://ollama:11434"
+    depends_on:
+      - db
+    networks:
+      - mynet
+
+  db:
+    restart: always
+    image: redis:latest
+    ports:
+      - "6379:6379"
+    volumes:
+      - /data/redis-data:/data
+    networks:
+      - mynet
+    
+  ollama:
+    image: ollama/ollama:latest
+    ports:
+      - "11434:11434"
+    networks:
+      - mynet
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              capabilities: [gpu]
+    volumes:
+      - ./ollama:/root/.ollama:rw
+
+networks:
+  mynet:
+    driver: bridge
